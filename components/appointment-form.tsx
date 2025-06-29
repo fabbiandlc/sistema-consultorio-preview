@@ -136,8 +136,85 @@ export default function AppointmentForm({
     }
   }, [selectedPatient])
 
+  const handleTimeSelect = (time: string) => {
+    setFormData(prev => ({ ...prev, time }))
+  }
+
+  // Función para verificar conflictos de horarios
+  const checkTimeConflicts = () => {
+    if (!formData.time || !formData.date || !formData.duration) return null
+    
+    const duration = parseInt(formData.duration)
+    const slotsNeeded = Math.ceil(duration / 15)
+    
+    // Función auxiliar para sumar minutos a una hora
+    const addMinutesToTime = (time: string, minutes: number): string => {
+      const [hours, mins] = time.split(':').map(Number)
+      const totalMinutes = hours * 60 + mins + minutes
+      const newHours = Math.floor(totalMinutes / 60)
+      const newMins = totalMinutes % 60
+      
+      if (newHours >= 22) return "22:00"
+      return `${newHours.toString().padStart(2, '0')}:${newMins.toString().padStart(2, '0')}`
+    }
+    
+    // Verificar cada slot que necesita la cita
+    for (let i = 0; i < slotsNeeded; i++) {
+      const checkTime = addMinutesToTime(formData.time, i * 15)
+      
+      // Verificar si hay una cita exacta en este horario
+      const conflictingAppointment = appointments.find(existingAppointment => 
+        existingAppointment.date === formData.date && 
+        existingAppointment.time === checkTime &&
+        existingAppointment.id !== (appointment?.id || 0) // Excluir la cita actual si estamos editando
+      )
+      
+      if (conflictingAppointment) {
+        return {
+          time: checkTime,
+          patient: conflictingAppointment.patient,
+          message: `Conflicto: Ya existe una cita a las ${checkTime} para ${conflictingAppointment.patient}`
+        }
+      }
+      
+      // Verificar si este slot se solapa con alguna cita existente
+      const overlappingAppointment = appointments.find(existingAppointment => {
+        if (existingAppointment.date !== formData.date || existingAppointment.id === (appointment?.id || 0)) return false
+        
+        const appointmentDuration = parseInt(existingAppointment.duration || "15")
+        const appointmentSlots = Math.ceil(appointmentDuration / 15)
+        
+        // Verificar si el slot actual está dentro del rango de la cita existente
+        for (let j = 0; j < appointmentSlots; j++) {
+          const appointmentSlotTime = addMinutesToTime(existingAppointment.time, j * 15)
+          if (appointmentSlotTime === checkTime) return true
+        }
+        
+        return false
+      })
+      
+      if (overlappingAppointment) {
+        return {
+          time: checkTime,
+          patient: overlappingAppointment.patient,
+          message: `Conflicto: Se solapa con la cita de ${overlappingAppointment.patient} (${overlappingAppointment.time} - ${overlappingAppointment.duration} min)`
+        }
+      }
+    }
+    
+    return null
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Verificar conflictos antes de enviar
+    const conflict = checkTimeConflicts()
+    if (conflict) {
+      alert(`Error: ${conflict.message}`)
+      return
+    }
+    
     onSubmit(formData)
   }
 
@@ -157,10 +234,6 @@ export default function AppointmentForm({
         patientId: parseInt(option.value)
       }))
     }
-  }
-
-  const handleTimeSelect = (time: string) => {
-    setFormData(prev => ({ ...prev, time }))
   }
 
   const handleTreatmentSelect = (option: ComboboxOption) => {
@@ -404,10 +477,19 @@ export default function AppointmentForm({
         </div>
 
         <div className="flex justify-end space-x-2 pt-4">
+          {checkTimeConflicts() && (
+            <div className="flex-1 text-sm text-destructive flex items-center gap-2">
+              ⚠️ {checkTimeConflicts()?.message}
+            </div>
+          )}
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isLoading || !formData.patient || !formData.treatment || !formData.date || !formData.time}>
+          <Button 
+            type="submit" 
+            disabled={isLoading || !formData.patient || !formData.treatment || !formData.date || !formData.time || checkTimeConflicts() !== null}
+            title={checkTimeConflicts()?.message || ""}
+          >
             {isLoading ? "Guardando..." : appointment ? "Guardar cambios" : "Crear cita"}
           </Button>
         </div>
