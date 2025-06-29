@@ -85,25 +85,25 @@ export default function ConsultationHistory() {
 
   const filteredConsultations = consultations.filter((consultation) => {
     const matchesSearch =
-      consultation.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consultation.treatment.toLowerCase().includes(searchTerm.toLowerCase())
+      (consultation.patient?.toLowerCase() ?? "").includes(searchTerm.toLowerCase()) ||
+      (consultation.treatment?.toLowerCase() ?? "").includes(searchTerm.toLowerCase())
 
-    const matchesDate = !filterDate || consultation.date === filterDate
-    const matchesTreatment = !filterTreatment || consultation.treatment === filterTreatment
-    const matchesPaymentStatus = !filterPaymentStatus || consultation.paymentStatus === filterPaymentStatus
+    const matchesDate = !filterDate || (consultation.date ?? "") === filterDate
+    const matchesTreatment = !filterTreatment || (consultation.treatment ?? "") === filterTreatment
+    const matchesPaymentStatus = !filterPaymentStatus || (consultation.paymentStatus ?? "") === filterPaymentStatus
 
     return matchesSearch && matchesDate && matchesTreatment && matchesPaymentStatus
   })
 
-  const uniqueTreatments = [...new Set(consultations.map((c) => c.treatment))]
+  const uniqueTreatments = [...new Set(consultations.map((c) => c.treatment ?? ""))]
 
-  const todayConsultations = consultations.filter((c) => c.date === "2024-01-27")
-  const uniquePatients = new Set(consultations.map((c) => c.patient)).size
+  const todayConsultations: CompletedConsultation[] = []
+  const uniquePatients = new Set(consultations.map((c) => c.patient ?? "")).size
   const averageDuration =
     consultations.length > 0
       ? Math.round(
           consultations.reduce((sum, c) => {
-            const duration = Number.parseInt(c.duration?.split(" ")[0] || "45")
+            const duration = Number.parseInt((c.duration?.split(" ")[0] ?? "45"))
             return sum + duration
           }, 0) / consultations.length,
         )
@@ -271,23 +271,36 @@ export default function ConsultationHistory() {
             <TableBody>
               {filteredConsultations.map((consultation) => (
                 <TableRow key={consultation.id}>
-                  <TableCell>{consultation.date}</TableCell>
-                  <TableCell>{consultation.time}</TableCell>
-                  <TableCell className="font-medium">{consultation.patient}</TableCell>
-                  <TableCell>{consultation.treatment}</TableCell>
-                  <TableCell>{consultation.duration}</TableCell>
-                  <TableCell>${consultation.cost}</TableCell>
-                  <TableCell>{getPaymentMethodText(consultation.paymentMethod)}</TableCell>
+                  <TableCell>{consultation.date ?? ""}</TableCell>
+                  <TableCell>{consultation.time ?? ""}</TableCell>
+                  <TableCell>{consultation.patient ?? ""}</TableCell>
+                  <TableCell>{consultation.treatment ?? ""}</TableCell>
+                  <TableCell>{consultation.duration ?? ""}</TableCell>
+                  <TableCell>${consultation.cost ?? 0}</TableCell>
+                  <TableCell>{getPaymentMethodText(consultation.paymentMethod ?? "cash")}</TableCell>
                   <TableCell>
-                    <Badge variant={getPaymentStatusColor(consultation.paymentStatus)}>
-                      {getPaymentStatusText(consultation.paymentStatus)}
+                    <Badge variant={getPaymentStatusColor(consultation.paymentStatus ?? "pending")}>
+                      {getPaymentStatusText(consultation.paymentStatus ?? "pending")}
                     </Badge>
                   </TableCell>
+                  <TableCell>{consultation.status ?? ""}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedConsultation(consultation)}>
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedConsultation({
+                            id: consultation.id,
+                            patient: consultation.patient ?? "",
+                            date: consultation.date ?? "",
+                            time: consultation.time ?? "",
+                            treatment: consultation.treatment ?? "",
+                            cost: consultation.cost ?? 0,
+                            duration: consultation.duration ?? "",
+                            notes: consultation.notes ?? "",
+                            paymentStatus: consultation.paymentStatus ?? "pending",
+                            paymentMethod: consultation.paymentMethod ?? "cash",
+                            completedAt: consultation.completedAt ?? ""
+                          })}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -325,13 +338,13 @@ export default function ConsultationHistory() {
                               <div>
                                 <Label className="text-sm font-medium">Método de Pago</Label>
                                 <p className="text-sm text-muted-foreground">
-                                  {getPaymentMethodText(consultation.paymentMethod)}
+                                  {getPaymentMethodText(consultation.paymentMethod ?? "cash")}
                                 </p>
                               </div>
                               <div>
                                 <Label className="text-sm font-medium">Estado de Pago</Label>
-                                <Badge variant={getPaymentStatusColor(consultation.paymentStatus)}>
-                                  {getPaymentStatusText(consultation.paymentStatus)}
+                                <Badge variant={getPaymentStatusColor(consultation.paymentStatus ?? "pending")}>
+                                  {getPaymentStatusText(consultation.paymentStatus ?? "pending")}
                                 </Badge>
                               </div>
                               <div>
@@ -341,7 +354,7 @@ export default function ConsultationHistory() {
                             </div>
                             <div>
                               <Label className="text-sm font-medium">Notas de la Consulta</Label>
-                              <Textarea value={consultation.notes} readOnly className="mt-2 min-h-[100px]" />
+                              <Textarea value={consultation.notes ?? ""} readOnly className="mt-2 min-h-[100px]" />
                             </div>
                           </div>
                         </DialogContent>

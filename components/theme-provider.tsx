@@ -7,5 +7,11 @@ import {
 } from 'next-themes'
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.body.setAttribute('data-theme-ready', 'true');
+    }
+  }, []);
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
+

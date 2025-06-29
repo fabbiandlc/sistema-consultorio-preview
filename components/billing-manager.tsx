@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DollarSign, CreditCard, Banknote, Smartphone, Plus, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,7 +35,13 @@ interface Consultation {
 
 export default function BillingManager() {
   const { getTodayAppointments, updateAppointment, treatments } = useClinic()
-  const consultations = getTodayAppointments().filter((a) => a.status === "completed")
+  // Calcular la fecha de hoy solo en cliente
+  const [today, setToday] = useState<string>("")
+  useEffect(() => {
+    setToday(new Date().toISOString().split('T')[0])
+  }, [])
+
+  const consultations = getTodayAppointments(today).filter((a) => a.status === "completed")
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null)

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { User, Plus, Search, FileText, Upload, Eye } from "lucide-react"
+import { useState, useEffect } from "react"
+import { User, Plus, Search, FileText, Upload, Eye, Calendar, DollarSign, FileImage } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,18 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinic } from "@/contexts/clinic-context"
-
-interface Patient {
-  id: number
-  name: string
-  email: string
-  phone: string
-  address: string
-  birthDate: string
-  emergencyContact: string
-  medicalHistory: string
-  documents: Document[]
-}
+import { Patient } from "@/lib/database"
 
 interface Consultation {
   id: number
@@ -42,25 +31,53 @@ interface Consultation {
   paymentStatus: "paid" | "pending" | "partial"
 }
 
-interface Document {
-  id: number
-  name: string
-  type: "radiography" | "photo" | "document"
-  uploadDate: string
-  url: string
-}
-
 export default function PatientManager() {
-  const { patients, getPatientAppointments } = useClinic()
+  const { patients, getPatientAppointments, addPatient } = useClinic()
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [isNewPatientDialogOpen, setIsNewPatientDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
+  // Estado local para el formulario de nuevo paciente
+  const [form, setForm] = useState({
+    name: "",
+    birthDate: "",
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: "",
+    medicalHistory: ""
+  })
+
+  const resetForm = () => setForm({
+    name: "",
+    birthDate: "",
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: "",
+    medicalHistory: ""
+  })
+
+  const handleCreatePatient = async () => {
+    if (!form.name) return
+    await addPatient({
+      name: form.name,
+      birthDate: form.birthDate || null,
+      email: form.email || "",
+      phone: form.phone || "",
+      address: form.address || "",
+      emergencyContact: form.emergencyContact || "",
+      medicalHistory: form.medicalHistory || ""
+    })
+    setIsNewPatientDialogOpen(false)
+    resetForm()
+  }
+
   const filteredPatients = patients.filter(
     (patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone.includes(searchTerm),
+      (patient.name?.toLowerCase() ?? "").includes(searchTerm.toLowerCase()) ||
+      (patient.email?.toLowerCase() ?? "").includes(searchTerm.toLowerCase()) ||
+      (patient.phone ?? "").includes(searchTerm),
   )
 
   const getPaymentStatusColor = (status: string) => {
@@ -96,7 +113,7 @@ export default function PatientManager() {
           <h3 className="text-lg font-medium">Gestión de Pacientes</h3>
           <p className="text-sm text-muted-foreground">Administra expedientes médicos y historial de pacientes</p>
         </div>
-        <Dialog open={isNewPatientDialogOpen} onOpenChange={setIsNewPatientDialogOpen}>
+        <Dialog open={isNewPatientDialogOpen} onOpenChange={(open) => { setIsNewPatientDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -111,39 +128,39 @@ export default function PatientManager() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nombre completo</Label>
-                  <Input id="name" placeholder="Nombre del paciente" />
+                  <Label htmlFor="name">Nombre completo *</Label>
+                  <Input id="name" placeholder="Nombre del paciente" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-                  <Input id="birthDate" type="date" />
+                  <Input id="birthDate" type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@ejemplo.com" />
+                  <Input id="email" type="email" placeholder="Correo electrónico" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Teléfono</Label>
-                  <Input id="phone" placeholder="+1 234 567 8900" />
+                  <Input id="phone" placeholder="+1 234 567 8900" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Dirección</Label>
-                <Input id="address" placeholder="Dirección completa" />
+                <Input id="address" placeholder="Dirección completa" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="emergencyContact">Contacto de emergencia</Label>
-                <Input id="emergencyContact" placeholder="+1 234 567 8900" />
+                <Input id="emergencyContact" placeholder="+1 234 567 8900" value={form.emergencyContact} onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="medicalHistory">Historia médica</Label>
-                <Textarea id="medicalHistory" placeholder="Alergias, medicamentos, condiciones médicas..." rows={3} />
+                <Textarea id="medicalHistory" placeholder="Alergias, medicamentos, condiciones médicas..." rows={3} value={form.medicalHistory} onChange={e => setForm(f => ({ ...f, medicalHistory: e.target.value }))} />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={() => setIsNewPatientDialogOpen(false)}>
+              <Button type="submit" onClick={handleCreatePatient}>
                 Crear paciente
               </Button>
             </DialogFooter>
@@ -182,8 +199,8 @@ export default function PatientManager() {
                       }`}
                       onClick={() => setSelectedPatient(patient)}
                     >
-                      <div className="font-medium">{patient.name}</div>
-                      <div className="text-sm text-muted-foreground">{patient.phone}</div>
+                      <div className="font-medium">{patient.name ?? ""}</div>
+                      <div className="text-sm text-muted-foreground">{patient.phone ?? ""}</div>
                       <div className="text-xs text-muted-foreground">
                         {getPatientAppointments(patient.id).length} consultas
                       </div>
@@ -211,10 +228,9 @@ export default function PatientManager() {
                     </CardHeader>
                     <CardContent>
                       <Tabs defaultValue="info" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
+                        <TabsList className="grid w-full grid-cols-3">
                           <TabsTrigger value="info">Información</TabsTrigger>
                           <TabsTrigger value="history">Historial</TabsTrigger>
-                          <TabsTrigger value="documents">Documentos</TabsTrigger>
                           <TabsTrigger value="billing">Facturación</TabsTrigger>
                         </TabsList>
 
@@ -222,28 +238,28 @@ export default function PatientManager() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <Label className="text-sm font-medium">Email</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.email}</p>
+                              <p className="text-sm text-muted-foreground">{selectedPatient.email || "No especificado"}</p>
                             </div>
                             <div>
                               <Label className="text-sm font-medium">Teléfono</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.phone}</p>
+                              <p className="text-sm text-muted-foreground">{selectedPatient.phone || "No especificado"}</p>
                             </div>
                             <div>
                               <Label className="text-sm font-medium">Fecha de nacimiento</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.birthDate}</p>
+                              <p className="text-sm text-muted-foreground">{selectedPatient.birthDate || "No especificado"}</p>
                             </div>
                             <div>
                               <Label className="text-sm font-medium">Contacto de emergencia</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.emergencyContact}</p>
+                              <p className="text-sm text-muted-foreground">{selectedPatient.emergencyContact || "No especificado"}</p>
                             </div>
                           </div>
                           <div>
                             <Label className="text-sm font-medium">Dirección</Label>
-                            <p className="text-sm text-muted-foreground">{selectedPatient.address}</p>
+                            <p className="text-sm text-muted-foreground">{selectedPatient.address || "No especificado"}</p>
                           </div>
                           <div>
                             <Label className="text-sm font-medium">Historia médica</Label>
-                            <p className="text-sm text-muted-foreground">{selectedPatient.medicalHistory}</p>
+                            <p className="text-sm text-muted-foreground">{selectedPatient.medicalHistory || "No especificado"}</p>
                           </div>
                         </TabsContent>
 
@@ -278,43 +294,6 @@ export default function PatientManager() {
                                   ))}
                                 </TableBody>
                               </Table>
-                            )}
-                          </div>
-                        </TabsContent>
-
-                        <TabsContent value="documents">
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h4 className="text-sm font-medium">Documentos del paciente</h4>
-                              <Button size="sm">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Subir archivo
-                              </Button>
-                            </div>
-
-                            {selectedPatient.documents.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-4">
-                                No hay documentos subidos
-                              </p>
-                            ) : (
-                              <div className="space-y-2">
-                                {selectedPatient.documents.map((document) => (
-                                  <div
-                                    key={document.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg"
-                                  >
-                                    <div>
-                                      <div className="font-medium text-sm">{document.name}</div>
-                                      <div className="text-xs text-muted-foreground">
-                                        {document.type} - {document.uploadDate}
-                                      </div>
-                                    </div>
-                                    <Button variant="ghost" size="sm">
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
                             )}
                           </div>
                         </TabsContent>

@@ -1,5 +1,6 @@
 import type React from "react"
 import { Bell, Search, Settings } from "lucide-react"
+import ThemeToggle from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -49,6 +50,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <DropdownMenuItem>Cerrar sesión</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <ThemeToggle />
           </div>
         </div>
       </header>

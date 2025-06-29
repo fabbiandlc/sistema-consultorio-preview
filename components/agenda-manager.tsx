@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar, Clock, Plus, Edit, ArrowUp, ArrowDown, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Calendar, Clock, Plus, Edit, ArrowUp, ArrowDown, Trash2, Users, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,17 +19,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useClinic } from "@/contexts/clinic-context"
-
-interface Appointment {
-  id: number
-  patient: string
-  time: string
-  treatment: string
-  status: "scheduled" | "completed"
-  cost: number
-  notes?: string
-  arrivalTime?: string
-}
+import AppointmentForm from "@/components/appointment-form"
+import DateNavigator from "@/components/date-navigator"
+import { Appointment } from "@/lib/database"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 export default function AgendaManager() {
   const {
@@ -40,14 +34,40 @@ export default function AgendaManager() {
     patients,
     treatments,
     deleteAppointment,
+    addAppointment,
+    addPatient,
+    addTreatment,
   } = useClinic()
 
-  const todayAppointments = getTodayAppointments()
+  // Estado para la fecha seleccionada
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const selectedDateString = format(selectedDate, 'yyyy-MM-dd')
+
+  const todayAppointments = getTodayAppointments(selectedDateString)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
-
   const [localAppointments, setLocalAppointments] = useState<Appointment[]>(appointments)
+  const [currentTime, setCurrentTime] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Actualizar localAppointments cuando cambian las citas
+  useEffect(() => {
+    setLocalAppointments(appointments)
+  }, [appointments])
+
+  // Limpiar editingAppointment cuando se cierra el diálogo
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setEditingAppointment(null)
+    }
+  }, [isDialogOpen])
+
+  // Use useEffect to set current time only on client side
+  useEffect(() => {
+    const now = new Date()
+    setCurrentTime(now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }))
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,7 +97,7 @@ export default function AgendaManager() {
       const appointment = todayAppointments.find((a) => a.id === id)
       if (appointment) {
         completeAppointment(id, {
-          completedAt: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+          completedAt: currentTime || "00:00", // Use currentTime or fallback
           duration: "45 min", // Default duration
           notes: "Consulta completada satisfactoriamente",
           paymentMethod: "cash",
@@ -106,6 +126,70 @@ export default function AgendaManager() {
     })
   }
 
+  const handleSubmitAppointment = async (appointmentData: Partial<Appointment>) => {
+    setIsLoading(true)
+    try {
+      if (editingAppointment) {
+        // Actualizar cita existente
+        await updateAppointment(editingAppointment.id, appointmentData)
+      } else {
+        // Crear nueva cita
+        // Verificar si el paciente existe, si no, crearlo
+        let patientId = appointmentData.patientId
+        if (!patientId && appointmentData.patient) {
+          const newPatientId = await addPatient({
+            name: appointmentData.patient,
+            email: "",
+            phone: "",
+            address: "",
+            birthDate: "",
+            emergencyContact: "",
+            medicalHistory: ""
+          })
+          patientId = newPatientId
+        }
+
+        // Verificar si el tratamiento existe, si no, crearlo
+        let treatmentId = 0
+        if (appointmentData.treatment) {
+          const existingTreatment = treatments.find(t => t.name === appointmentData.treatment)
+          if (!existingTreatment) {
+            treatmentId = await addTreatment({
+              name: appointmentData.treatment,
+              defaultCost: appointmentData.cost || 0
+            })
+          }
+        }
+
+        await addAppointment({
+          patientId: patientId || 0,
+          patient: appointmentData.patient || "",
+          date: appointmentData.date || selectedDateString,
+          time: appointmentData.time || "",
+          treatment: appointmentData.treatment || "",
+          status: "scheduled",
+          cost: appointmentData.cost || 0,
+          notes: appointmentData.notes || "",
+          duration: appointmentData.duration || "",
+          paymentMethod: appointmentData.paymentMethod || "cash",
+          paymentStatus: appointmentData.paymentStatus || "pending"
+        })
+      }
+      
+      setIsDialogOpen(false)
+      setEditingAppointment(null)
+    } catch (error: any) {
+      alert(error?.message || JSON.stringify(error))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setIsDialogOpen(false)
+    setEditingAppointment(null)
+  }
+
   const scheduledAppointments = todayAppointments
     .filter((apt) => apt.status === "scheduled")
     .sort((a, b) => a.time.localeCompare(b.time))
@@ -113,10 +197,10 @@ export default function AgendaManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Gestión de Agenda</h3>
-          <p className="text-sm text-muted-foreground">Administra las citas y cola de espera del día</p>
-        </div>
+        <DateNavigator 
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -124,63 +208,68 @@ export default function AgendaManager() {
               Nueva Cita
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingAppointment ? "Editar Cita" : "Nueva Cita"}</DialogTitle>
               <DialogDescription>
                 {editingAppointment ? "Modifica los datos de la cita" : "Programa una nueva cita para el paciente"}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="patient" className="text-right">
-                  Paciente
-                </Label>
-                <Input id="patient" placeholder="Nombre del paciente" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="time" className="text-right">
-                  Hora
-                </Label>
-                <Input id="time" type="time" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="treatment" className="text-right">
-                  Tratamiento
-                </Label>
-                <Select>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Seleccionar tratamiento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {treatments.map((treatment) => (
-                      <SelectItem key={treatment.id} value={treatment.name}>
-                        {treatment.name} - ${treatment.defaultCost}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cost" className="text-right">
-                  Costo
-                </Label>
-                <Input id="cost" type="number" placeholder="0" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="notes" className="text-right">
-                  Notas
-                </Label>
-                <Textarea id="notes" placeholder="Observaciones adicionales" className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" onClick={() => setIsDialogOpen(false)}>
-                {editingAppointment ? "Guardar cambios" : "Crear cita"}
-              </Button>
-            </DialogFooter>
+            
+            <AppointmentForm
+              appointment={editingAppointment}
+              patients={patients}
+              treatments={treatments}
+              appointments={appointments}
+              onSubmit={handleSubmitAppointment}
+              onCancel={handleCancel}
+              isLoading={isLoading}
+              addPatient={addPatient}
+            />
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* Cards de estadísticas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                ? "Pacientes Hoy" 
+                : `Pacientes ${format(selectedDate, 'd/M/yyyy')}`}
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todayAppointments.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {todayAppointments.filter(a => a.status === "completed").length} completadas, {todayAppointments.filter(a => a.status === "scheduled").length} pendientes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Consultas Completadas</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todayAppointments.filter(a => a.status === "completed").length}</div>
+            <p className="text-xs text-muted-foreground">De {todayAppointments.length} programadas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pacientes Restantes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todayAppointments.filter(a => a.status === "scheduled").length}</div>
+            <p className="text-xs text-muted-foreground">Citas programadas</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -189,9 +278,15 @@ export default function AgendaManager() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Agenda del Día
+                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                  ? "Agenda del Día" 
+                  : `Agenda del ${format(selectedDate, 'd/M/yyyy')}`}
               </CardTitle>
-              <CardDescription>Vista completa de todas las citas programadas</CardDescription>
+              <CardDescription>
+                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                  ? "Vista completa de todas las citas programadas" 
+                  : `Vista completa de todas las citas programadas para el ${format(selectedDate, 'EEEE, d \'de\' MMMM', { locale: es })}`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -278,9 +373,15 @@ export default function AgendaManager() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Citas Programadas
+                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                  ? "Citas Programadas" 
+                  : `Citas del ${format(selectedDate, 'd/M/yyyy')}`}
               </CardTitle>
-              <CardDescription>Próximas citas del día</CardDescription>
+              <CardDescription>
+                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                  ? "Próximas citas del día" 
+                  : `Próximas citas del ${format(selectedDate, 'd/M/yyyy')}`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -309,6 +410,36 @@ export default function AgendaManager() {
           </Card>
         </div>
       </div>
+
+      {/* Actividad Reciente */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Actividad Reciente</CardTitle>
+          <CardDescription>Últimas consultas completadas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {appointments
+              .filter(a => a.status === "completed")
+              .slice(0, 5)
+              .map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{appointment.patient}</div>
+                    <div className="text-sm text-muted-foreground">{appointment.treatment}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium">Consulta completada</div>
+                    <div className="text-xs text-muted-foreground">{appointment.completedAt || appointment.time}</div>
+                  </div>
+                </div>
+              ))}
+            {appointments.filter(a => a.status === "completed").length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">No hay actividad reciente</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
