@@ -68,7 +68,7 @@ export default function DateNavigator({
           <Button
             variant="outline"
             className={cn(
-              "justify-start text-left font-normal px-3 py-1",
+              "justify-start text-left font-normal px-3 py-1 text-sm",
               !selectedDate && "text-muted-foreground"
             )}
           >

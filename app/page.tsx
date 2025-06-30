@@ -60,9 +60,8 @@ export default function DentalClinicSystem() {
         </DropdownMenuContent>
       </DropdownMenu>
     ) : null}>
-      <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8">
-        <div className="mb-2 sm:mb-4" />
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <div className="flex-1 flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-4 sm:pb-6">
           {isMobile ? (
             <div className="flex items-center mb-2 relative">
               <span className="flex-1 text-center w-full text-2xl font-semibold">
@@ -70,32 +69,29 @@ export default function DentalClinicSystem() {
               </span>
             </div>
           ) : (
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 sm:gap-2">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 sm:gap-2 bg-background rounded-none">
               {tabOptions.map(tab => (
-                <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm">{tab.label}</TabsTrigger>
+                <TabsTrigger key={tab.value} value={tab.value} className="text-base">{tab.label}</TabsTrigger>
               ))}
             </TabsList>
           )}
-
-          <TabsContent value="agenda" className="space-y-4">
-            <AgendaManager />
-          </TabsContent>
-
-          <TabsContent value="patients">
-            <PatientManager />
-          </TabsContent>
-
-          <TabsContent value="history">
-            <ConsultationHistory />
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <ReportsManager />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <SettingsManager />
-          </TabsContent>
+          <div className="mt-4 sm:mt-6 px-2 sm:px-4 md:px-8">
+            <TabsContent value="agenda">
+              <AgendaManager />
+            </TabsContent>
+            <TabsContent value="patients">
+              <PatientManager />
+            </TabsContent>
+            <TabsContent value="history">
+              <ConsultationHistory />
+            </TabsContent>
+            <TabsContent value="reports">
+              <ReportsManager />
+            </TabsContent>
+            <TabsContent value="settings">
+              <SettingsManager />
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </DashboardLayout>

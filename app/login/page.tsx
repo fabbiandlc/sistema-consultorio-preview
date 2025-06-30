@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import Head from "next/head"
+import ThemeToggle from "@/components/theme-toggle"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -57,40 +58,43 @@ export default function LoginPage() {
         .flicker { animation: flicker 4s infinite linear; }
         .retro-font { font-family: 'VT323', monospace !important; }
       `}</style>
-      <div className="min-h-screen flex items-center justify-center bg-[#000] retro-font">
-        <div className="relative w-full max-w-sm p-8 border border-[#ccc] rounded shadow-lg" style={{ boxShadow: "none" }}>
-          <h1 className="text-[#eee] text-2xl mb-6 text-center tracking-wider">
+      <div className="min-h-screen flex items-center justify-center bg-background retro-font">
+        <div className="absolute top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
+        <div className="relative w-full max-w-xs sm:max-w-sm p-4 sm:p-6 md:p-8 border border-border rounded shadow-lg retro-font" style={{ boxShadow: "none" }}>
+          <h1 className="text-2xl mb-6 text-center tracking-wider retro-font text-foreground">
             Iniciar sesión
           </h1>
-          <form className="space-y-4 tracking-widest" onSubmit={handleSubmit}>
+          <form className="space-y-4 tracking-widest retro-font" onSubmit={handleSubmit}>
             <div>
-              <Label htmlFor="email" className="block text-[#eee] mb-1 text-sm">Correo electrónico</Label>
+              <Label htmlFor="email" className="block mb-1 text-sm retro-font text-foreground">Correo electrónico</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full bg-transparent border border-[#ccc] px-3 py-2 text-[#eee] placeholder-[#aaa] focus:outline-none focus:ring-0 retro-font"
+                className="w-full bg-transparent border border-border px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 retro-font"
                 autoComplete="username"
               />
             </div>
             <div>
-              <Label htmlFor="password" className="block text-[#eee] mb-1 text-sm">Contraseña</Label>
+              <Label htmlFor="password" className="block mb-1 text-sm retro-font text-foreground">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Contraseña"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full bg-transparent border border-[#ccc] px-3 py-2 text-[#eee] placeholder-[#aaa] focus:outline-none focus:ring-0 retro-font"
+                className="w-full bg-transparent border border-border px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 retro-font"
                 autoComplete="current-password"
               />
             </div>
             {error && <div className="text-red-500 text-sm text-center font-bold retro-font">{error}</div>}
             <Button
               type="submit"
-              className="w-full py-2 border border-[#ccc] text-[#eee] font-bold transition-colors duration-150 bg-transparent hover:bg-[#eee] hover:text-[#091013] retro-font"
+              className="w-full py-2 border border-border text-foreground font-bold transition-colors duration-150 bg-transparent hover:bg-muted hover:text-primary retro-font"
               style={{ letterSpacing: 2 }}
               disabled={loading}
             >

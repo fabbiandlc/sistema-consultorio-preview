@@ -195,7 +195,7 @@ export default function AgendaManager() {
     .sort((a, b) => a.time.localeCompare(b.time))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 sm:mb-4">
         <DateNavigator 
           selectedDate={selectedDate}
@@ -203,9 +203,9 @@ export default function AgendaManager() {
         />
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
+            <Button onClick={() => setIsDialogOpen(true)} className="text-sm">
               <Plus className="mr-2 h-4 w-4" />
-              Nueva Cita
+              Nueva cita
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
