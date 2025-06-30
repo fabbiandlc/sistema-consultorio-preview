@@ -53,6 +53,7 @@ interface ClinicContextType {
   treatments: Treatment[]
   addPatient: (patient: Omit<Patient, "id">) => Promise<number>
   updatePatient: (id: number, patient: Partial<Patient>) => void
+  deletePatient: (id: number) => void
   addAppointment: (appointment: Omit<Appointment, "id">) => void
   updateAppointment: (id: number, appointment: Partial<Appointment>) => void
   deleteAppointment: (id: number) => void
@@ -111,6 +112,11 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
 
   const updatePatient = async (id: number, patientData: Partial<Patient>) => {
     await db.updatePatient(id, patientData)
+    setPatients(await db.getPatients())
+  }
+
+  const deletePatient = async (id: number) => {
+    await db.deletePatient(id)
     setPatients(await db.getPatients())
   }
 
@@ -198,6 +204,7 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
         treatments,
         addPatient,
         updatePatient,
+        deletePatient,
         addAppointment,
         updateAppointment,
         deleteAppointment,

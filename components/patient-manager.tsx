@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Plus, Search, FileText, Upload, Eye, Calendar, DollarSign, FileImage } from "lucide-react"
+import { User, Plus, Search, FileText, Upload, Eye, Calendar, DollarSign, FileImage, Edit, Trash2, Save, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -32,10 +43,12 @@ interface Consultation {
 }
 
 export default function PatientManager() {
-  const { patients, getPatientAppointments, addPatient } = useClinic()
+  const { patients, getPatientAppointments, addPatient, updatePatient, deletePatient } = useClinic()
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [isNewPatientDialogOpen, setIsNewPatientDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Partial<Patient>>({})
 
   // Estado local para el formulario de nuevo paciente
   const [form, setForm] = useState({
@@ -73,6 +86,36 @@ export default function PatientManager() {
     resetForm()
   }
 
+  const handleEditField = (field: string, value: string) => {
+    setEditingField(field)
+    setEditForm({ [field]: value })
+  }
+
+  const handleSaveEdit = async () => {
+    if (selectedPatient && editingField) {
+      await updatePatient(selectedPatient.id, editForm)
+      setEditingField(null)
+      setEditForm({})
+      // Actualizar inmediatamente el paciente seleccionado con los nuevos datos
+      setSelectedPatient({
+        ...selectedPatient,
+        ...editForm
+      })
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingField(null)
+    setEditForm({})
+  }
+
+  const handleDeletePatient = async (patientId: number) => {
+    await deletePatient(patientId)
+    if (selectedPatient?.id === patientId) {
+      setSelectedPatient(null)
+    }
+  }
+
   const filteredPatients = patients.filter(
     (patient) =>
       (patient.name?.toLowerCase() ?? "").includes(searchTerm.toLowerCase()) ||
@@ -104,6 +147,60 @@ export default function PatientManager() {
       default:
         return status
     }
+  }
+
+  const renderEditableField = (field: string, label: string, value: string | null | undefined, type: string = "text") => {
+    const isEditing = editingField === field
+    const currentValue = value || "No especificado"
+    
+    return (
+      <div className="flex items-center justify-between group">
+        <div className="flex-1">
+          <Label className="text-sm font-medium">{label}</Label>
+          {isEditing ? (
+            <div className="mt-1">
+              {type === "textarea" ? (
+                <Textarea
+                  value={editForm[field as keyof Patient] || ""}
+                  onChange={(e) => setEditForm({ ...editForm, [field]: e.target.value })}
+                  className="mt-1"
+                  rows={3}
+                />
+              ) : (
+                <Input
+                  type={type}
+                  value={editForm[field as keyof Patient] || ""}
+                  onChange={(e) => setEditForm({ ...editForm, [field]: e.target.value })}
+                  className="mt-1"
+                />
+              )}
+              <div className="flex gap-2 mt-2">
+                <Button size="sm" onClick={handleSaveEdit}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Guardar
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{currentValue}</p>
+          )}
+        </div>
+        {!isEditing && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => handleEditField(field, value || "")}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -220,11 +317,40 @@ export default function PatientManager() {
                 return (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Expediente: {selectedPatient.name}
-                      </CardTitle>
-                      <CardDescription>Información completa del paciente</CardDescription>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          <div>
+                            <CardTitle>Expediente: {selectedPatient.name}</CardTitle>
+                            <CardDescription>Información completa del paciente</CardDescription>
+                          </div>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Eliminar
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar paciente?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el paciente "{selectedPatient.name}" y todos sus datos asociados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeletePatient(selectedPatient.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <Tabs defaultValue="info" className="w-full">
@@ -236,30 +362,15 @@ export default function PatientManager() {
 
                         <TabsContent value="info" className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-sm font-medium">Email</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.email || "No especificado"}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Teléfono</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.phone || "No especificado"}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Fecha de nacimiento</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.birthDate || "No especificado"}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Contacto de emergencia</Label>
-                              <p className="text-sm text-muted-foreground">{selectedPatient.emergencyContact || "No especificado"}</p>
-                            </div>
+                            {renderEditableField("name", "Nombre", selectedPatient.name)}
+                            {renderEditableField("birthDate", "Fecha de nacimiento", selectedPatient.birthDate, "date")}
+                            {renderEditableField("email", "Email", selectedPatient.email as string | undefined)}
+                            {renderEditableField("phone", "Teléfono", selectedPatient.phone as string | undefined)}
+                            {renderEditableField("address", "Dirección", selectedPatient.address as string | undefined)}
+                            {renderEditableField("emergencyContact", "Contacto de emergencia", selectedPatient.emergencyContact as string | undefined)}
                           </div>
                           <div>
-                            <Label className="text-sm font-medium">Dirección</Label>
-                            <p className="text-sm text-muted-foreground">{selectedPatient.address || "No especificado"}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Historia médica</Label>
-                            <p className="text-sm text-muted-foreground">{selectedPatient.medicalHistory || "No especificado"}</p>
+                            {renderEditableField("medicalHistory", "Historia médica", selectedPatient.medicalHistory as string | undefined, "textarea")}
                           </div>
                         </TabsContent>
 
