@@ -24,8 +24,17 @@ export default function ReportsManager() {
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [periodType, setPeriodType] = useState<"day" | "week" | "month">("day")
   
+  // Función helper para obtener la fecha local en formato YYYY-MM-DD
+  const getLocalDateString = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   useEffect(() => {
-    const todayDate = new Date().toISOString().split('T')[0]
+    const todayDate = getLocalDateString()
     setToday(todayDate)
     setSelectedDate(todayDate)
     
@@ -34,7 +43,7 @@ export default function ReportsManager() {
     const dayOfWeek = currentDate.getDay()
     const monday = new Date(currentDate)
     monday.setDate(currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1))
-    const mondayStr = monday.toISOString().split('T')[0]
+    const mondayStr = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`
     setSelectedWeek(mondayStr)
     
     // Calcular el mes y año actual
@@ -49,7 +58,7 @@ export default function ReportsManager() {
     switch (periodType) {
       case "day":
         // Si no hay fecha seleccionada o es la fecha por defecto, usar la fecha actual
-        const currentDate = new Date().toISOString().split('T')[0]
+        const currentDate = getLocalDateString()
         const dateToUse = selectedDate || currentDate
         return getTodayAppointments(dateToUse).filter((a) => a.status === "completed")
       case "week":
@@ -74,7 +83,7 @@ export default function ReportsManager() {
           return consultationDate >= monthStart && consultationDate <= monthEnd
         })
       default:
-        const defaultDate = new Date().toISOString().split('T')[0]
+        const defaultDate = getLocalDateString()
         const defaultDateToUse = selectedDate || defaultDate
         return getTodayAppointments(defaultDateToUse).filter((a) => a.status === "completed")
     }
@@ -363,14 +372,14 @@ export default function ReportsManager() {
     }
     
     // Descargar el PDF
-    const fileName = `reporte_consultorio_${getPeriodDisplayName().replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+    const fileName = `reporte_consultorio_${getPeriodDisplayName().replace(/[^a-zA-Z0-9]/g, '_')}_${getLocalDateString()}.pdf`
     doc.save(fileName)
   }
 
   const getPeriodDisplayName = () => {
     switch (periodType) {
       case "day":
-        const currentDate = new Date().toISOString().split('T')[0]
+        const currentDate = getLocalDateString()
         const dayToShow = selectedDate || currentDate
         return `Día: ${dayToShow}`
       case "week":
@@ -384,7 +393,7 @@ export default function ReportsManager() {
         const monthName = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
         return `Mes: ${monthName}`
       default:
-        const defaultDate = new Date().toISOString().split('T')[0]
+        const defaultDate = getLocalDateString()
         const defaultDayToShow = selectedDate || defaultDate
         return `Día: ${defaultDayToShow}`
     }
@@ -407,14 +416,14 @@ export default function ReportsManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-medium">Reportes y Facturación</h3>
           <p className="text-sm text-muted-foreground">Análisis financiero y gestión de pagos</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:space-x-2">
           <Select value={periodType} onValueChange={(value: "day" | "week" | "month") => setPeriodType(value)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -429,7 +438,7 @@ export default function ReportsManager() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-40"
+              className="w-full sm:w-40"
             />
           )}
           
@@ -438,14 +447,14 @@ export default function ReportsManager() {
               type="date"
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(e.target.value)}
-              className="w-40"
+              className="w-full sm:w-40"
             />
           )}
           
           {periodType === "month" && (
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:space-x-2 w-full sm:w-auto">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Mes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -465,7 +474,7 @@ export default function ReportsManager() {
               </Select>
               
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-full sm:w-24">
                   <SelectValue placeholder="Año" />
                 </SelectTrigger>
                 <SelectContent>
@@ -479,7 +488,7 @@ export default function ReportsManager() {
             </div>
           )}
           
-          <Button variant="outline" onClick={exportReport}>
+          <Button variant="outline" onClick={exportReport} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
@@ -492,14 +501,14 @@ export default function ReportsManager() {
       </div>
 
       {/* Estadísticas principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos del Período</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Ingresos del Período</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${periodTotal}</div>
+            <div className="text-lg sm:text-2xl font-bold">${periodTotal}</div>
             <p className="text-xs text-muted-foreground">
               {periodConsultationCount} consultas
             </p>
@@ -508,33 +517,33 @@ export default function ReportsManager() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Consultas del Período</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Consultas del Período</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{periodConsultationCount}</div>
+            <div className="text-lg sm:text-2xl font-bold">{periodConsultationCount}</div>
             <p className="text-xs text-muted-foreground">Total del período</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Promedio por Consulta</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Promedio por Consulta</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${averagePerConsultation}</div>
+            <div className="text-lg sm:text-2xl font-bold">${averagePerConsultation}</div>
             <p className="text-xs text-muted-foreground">Valor promedio</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pagos Pendientes</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Pagos Pendientes</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${periodPendingTotal}</div>
+            <div className="text-lg sm:text-2xl font-bold">${periodPendingTotal}</div>
             <p className="text-xs text-muted-foreground">Por cobrar</p>
           </CardContent>
         </Card>
@@ -548,7 +557,7 @@ export default function ReportsManager() {
 
         <TabsContent value="reports" className="space-y-4">
           {/* Resumen financiero del período */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Resumen Financiero del Período</CardTitle>

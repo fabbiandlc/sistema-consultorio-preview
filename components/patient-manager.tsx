@@ -205,14 +205,14 @@ export default function PatientManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-medium">Gestión de Pacientes</h3>
           <p className="text-sm text-muted-foreground">Administra expedientes médicos y historial de pacientes</p>
         </div>
         <Dialog open={isNewPatientDialogOpen} onOpenChange={(open) => { setIsNewPatientDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Paciente
             </Button>
@@ -265,8 +265,8 @@ export default function PatientManager() {
         </Dialog>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-1">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -309,7 +309,7 @@ export default function PatientManager() {
           </Card>
         </div>
 
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
           {selectedPatient ? (
             <>
               {(() => {
@@ -361,7 +361,7 @@ export default function PatientManager() {
                         </TabsList>
 
                         <TabsContent value="info" className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {renderEditableField("name", "Nombre", selectedPatient.name)}
                             {renderEditableField("birthDate", "Fecha de nacimiento", selectedPatient.birthDate, "date")}
                             {renderEditableField("email", "Email", selectedPatient.email as string | undefined)}
@@ -411,7 +411,7 @@ export default function PatientManager() {
 
                         <TabsContent value="billing">
                           <div className="space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <Card>
                                 <CardHeader className="pb-2">
                                   <CardTitle className="text-sm">Total Consultas</CardTitle>

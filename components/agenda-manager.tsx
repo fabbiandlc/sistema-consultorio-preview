@@ -196,14 +196,14 @@ export default function AgendaManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <DateNavigator 
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
         />
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nueva Cita
             </Button>
@@ -232,10 +232,10 @@ export default function AgendaManager() {
       </div>
 
       {/* Cards de estadísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
                 ? "Pacientes Hoy" 
                 : `Pacientes ${format(selectedDate, 'd/M/yyyy')}`}
@@ -243,7 +243,7 @@ export default function AgendaManager() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayAppointments.length}</div>
+            <div className="text-lg sm:text-2xl font-bold">{todayAppointments.length}</div>
             <p className="text-xs text-muted-foreground">
               {todayAppointments.filter(a => a.status === "completed").length} completadas, {todayAppointments.filter(a => a.status === "scheduled").length} pendientes
             </p>
@@ -252,29 +252,29 @@ export default function AgendaManager() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Consultas Completadas</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Consultas Completadas</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayAppointments.filter(a => a.status === "completed").length}</div>
+            <div className="text-lg sm:text-2xl font-bold">{todayAppointments.filter(a => a.status === "completed").length}</div>
             <p className="text-xs text-muted-foreground">De {todayAppointments.length} programadas</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes Restantes</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Pacientes Restantes</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayAppointments.filter(a => a.status === "scheduled").length}</div>
+            <div className="text-lg sm:text-2xl font-bold">{todayAppointments.filter(a => a.status === "scheduled").length}</div>
             <p className="text-xs text-muted-foreground">Citas programadas</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export default function AgendaManager() {
             <CardContent>
               <div className="space-y-4">
                 {todayAppointments.map((appointment, index) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
                     <div className="flex items-center space-x-4">
                       <div className="text-sm font-medium w-16">{appointment.time}</div>
                       <div className="flex-1">
@@ -305,7 +305,7 @@ export default function AgendaManager() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={getStatusColor(appointment.status)}>{getStatusText(appointment.status)}</Badge>
 
                       <div className="flex flex-col space-y-1">

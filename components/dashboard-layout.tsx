@@ -9,12 +9,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold">Dashboard</h1>
+        <div className="flex h-14 sm:h-16 items-center px-2 sm:px-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <h1 className="text-lg sm:text-xl font-semibold">Dashboard</h1>
           </div>
 
-          <div className="ml-auto flex items-center space-x-4">
+          <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
           </div>
         </div>

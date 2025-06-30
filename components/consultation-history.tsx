@@ -111,7 +111,7 @@ export default function ConsultationHistory() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-medium">Historial de Consultas</h3>
           <p className="text-sm text-muted-foreground">Registro completo de todas las consultas completadas</p>
@@ -127,7 +127,7 @@ export default function ConsultationHistory() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="search">Buscar</Label>
               <div className="relative">
