@@ -10,6 +10,11 @@ import { Combobox } from "@/components/ui/combobox"
 import { Appointment, Patient, Treatment } from "@/lib/database"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScheduleGrid } from "@/components/schedule-grid"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface ComboboxOption {
   label: string
@@ -26,6 +31,11 @@ interface AppointmentFormProps {
   isLoading?: boolean
   addPatient?: (patient: Omit<Patient, "id">) => Promise<number>
   selectedDate?: string
+}
+
+function parseDateLocal(dateString: string) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
 export default function AppointmentForm({
@@ -346,14 +356,33 @@ export default function AppointmentForm({
           <Label htmlFor="date" className="text-right">
             Fecha
           </Label>
-          <Input
-            id="date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-            className="col-span-3"
-            required
-          />
+          <div className="col-span-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={"w-full justify-start text-left font-normal px-3 py-1 text-sm"}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.date
+                    ? format(new Date(formData.date), "EEEE, d 'de' MMMM", { locale: es })
+                    : "Selecciona una fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.date ? parseDateLocal(formData.date) : undefined}
+                  onSelect={date => {
+                    if (date) {
+                      setFormData(prev => ({ ...prev, date: format(date, 'yyyy-MM-dd') }))
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
