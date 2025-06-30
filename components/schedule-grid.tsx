@@ -44,6 +44,42 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   // Obtener citas del día seleccionado
   const dayAppointments = appointments.filter(appointment => appointment.date === date)
   
+  // Verificar si la fecha seleccionada es hoy (una sola vez)
+  const today = new Date().toLocaleDateString('en-CA') // Formato YYYY-MM-DD en zona horaria local
+  
+  // Función más robusta para comparar fechas
+  const isSameDay = (date1: string, date2: string) => {
+    // Normalizar las fechas para comparación
+    const normalizeDate = (dateStr: string) => {
+      // Si la fecha ya está en formato YYYY-MM-DD, la devolvemos tal como está
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr
+      }
+      // Si no, intentamos parsearla
+      const date = new Date(dateStr)
+      return date.toLocaleDateString('en-CA')
+    }
+    
+    const normalizedDate1 = normalizeDate(date1)
+    const normalizedDate2 = normalizeDate(date2)
+    
+    return normalizedDate1 === normalizedDate2
+  }
+  
+  const isSelectedDateToday = isSameDay(date, today)
+  
+  // Logs de depuración
+  console.log('Fecha seleccionada:', date)
+  console.log('Fecha de hoy (local):', today)
+  console.log('¿Es hoy?:', isSelectedDateToday)
+  console.log('Tipo de fecha seleccionada:', typeof date)
+  console.log('Tipo de fecha de hoy:', typeof today)
+  
+  // Obtener la hora actual (una sola vez)
+  const now = new Date()
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  
   // Verificar si un hueco está ocupado
   const isSlotOccupied = (time: string) => {
     return dayAppointments.some(appointment => appointment.time === time)
@@ -108,11 +144,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     if (isSlotInConflictWithExisting(time)) return false
     
     // Si es hoy, verificar que no sea una hora pasada
-    const today = new Date().toISOString().split('T')[0]
-    if (date === today) {
-      const now = new Date()
-      const currentHour = now.getHours()
-      const currentMinute = now.getMinutes()
+    if (isSelectedDateToday) {
       const [slotHour, slotMinute] = time.split(':').map(Number)
       
       // Si la hora del slot es menor que la hora actual, no está disponible
@@ -159,7 +191,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Cronograma - {new Date(date).toLocaleDateString('es-ES', { 
+          Cronograma - {new Date(date + 'T00:00:00').toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
@@ -181,7 +213,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               Citas con duración extendida - Se verifican solapamientos
             </div>
           )}
-          {date === new Date().toISOString().split('T')[0] && (
+          {isSelectedDateToday && (
             <div className="text-xs mt-1">
               Hoy - Solo se muestran horas futuras
             </div>
@@ -196,16 +228,15 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             const isSelected = selectedTime === time
             const isConflict = isSlotInConflict(time)
             const isConflictWithExisting = isSlotInConflictWithExisting(time)
+            
+            // Verificar si el slot está en el pasado usando la hora real actual
             const isPast = (() => {
-              const today = new Date().toISOString().split('T')[0]
-              if (date === today) {
-                const now = new Date()
-                const currentHour = now.getHours()
-                const currentMinute = now.getMinutes()
+              if (isSelectedDateToday) {
                 const [slotHour, slotMinute] = time.split(':').map(Number)
-                return slotHour < currentHour || (slotHour === currentHour && slotMinute <= currentMinute)
+                const isPastTime = slotHour < currentHour || (slotHour === currentHour && slotMinute <= currentMinute)
+                return isPastTime
               }
-              return false
+              return false // Para otros días, no marcar como pasado
             })()
             
             return (

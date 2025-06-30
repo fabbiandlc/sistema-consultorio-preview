@@ -225,6 +225,7 @@ export default function AgendaManager() {
               onCancel={handleCancel}
               isLoading={isLoading}
               addPatient={addPatient}
+              selectedDate={selectedDateString}
             />
           </DialogContent>
         </Dialog>

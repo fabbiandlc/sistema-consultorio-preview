@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import DashboardLayout from "@/components/dashboard-layout"
 import AgendaManager from "@/components/agenda-manager"
 import PatientManager from "@/components/patient-manager"
-import BillingManager from "@/components/billing-manager"
 import ReportsManager from "@/components/reports-manager"
 import ConsultationHistory from "@/components/consultation-history"
 import SettingsManager from "@/components/settings-manager"
@@ -18,13 +17,12 @@ export default function DentalClinicSystem() {
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
             <TabsTrigger value="patients">Pacientes</TabsTrigger>
             <TabsTrigger value="history">Historial</TabsTrigger>
-            <TabsTrigger value="billing">Facturación</TabsTrigger>
             <TabsTrigger value="reports">Reportes</TabsTrigger>
-            <TabsTrigger value="settings">Configuración</TabsTrigger>
+            <TabsTrigger value="settings">Tratamientos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="agenda" className="space-y-4">
@@ -37,10 +35,6 @@ export default function DentalClinicSystem() {
 
           <TabsContent value="history">
             <ConsultationHistory />
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <BillingManager />
           </TabsContent>
 
           <TabsContent value="reports">

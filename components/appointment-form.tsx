@@ -25,6 +25,7 @@ interface AppointmentFormProps {
   onCancel: () => void
   isLoading?: boolean
   addPatient?: (patient: Omit<Patient, "id">) => Promise<number>
+  selectedDate?: string
 }
 
 export default function AppointmentForm({
@@ -35,13 +36,14 @@ export default function AppointmentForm({
   onSubmit,
   onCancel,
   isLoading = false,
-  addPatient
+  addPatient,
+  selectedDate
 }: AppointmentFormProps) {
   // Estado del formulario
   const [formData, setFormData] = useState({
     patientId: appointment?.patientId || 0,
     patient: appointment?.patient || "",
-    date: appointment?.date || "",
+    date: appointment?.date || selectedDate || "",
     time: appointment?.time || "",
     treatment: appointment?.treatment || "",
     cost: appointment?.cost || 0,
@@ -100,7 +102,7 @@ export default function AppointmentForm({
       setFormData({
         patientId: 0,
         patient: "",
-        date: "",
+        date: selectedDate || "",
         time: "",
         treatment: "",
         cost: 0,
@@ -112,7 +114,7 @@ export default function AppointmentForm({
       setSelectedPatient(null)
       setSelectedTreatment(null)
     }
-  }, [appointment])
+  }, [appointment, selectedDate])
 
   // Opciones para los combobox
   const patientOptions: ComboboxOption[] = patients.map(patient => ({
