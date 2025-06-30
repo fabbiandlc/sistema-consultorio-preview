@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import DashboardLayout from "@/components/dashboard-layout"
 import AgendaManager from "@/components/agenda-manager"
@@ -10,12 +10,15 @@ import ConsultationHistory from "@/components/consultation-history"
 import SettingsManager from "@/components/settings-manager"
 import { useClinic } from "@/contexts/clinic-context"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Menu } from "lucide-react"
+import { Menu, LogOut } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { supabase } from "@/lib/supabaseClient"
+import { useRouter } from "next/navigation"
 
 export default function DentalClinicSystem() {
   const [activeTab, setActiveTab] = useState("agenda")
   const isMobile = useIsMobile()
+  const router = useRouter()
   const tabOptions = [
     { value: "agenda", label: "Agenda" },
     { value: "patients", label: "Pacientes" },
@@ -23,6 +26,22 @@ export default function DentalClinicSystem() {
     { value: "reports", label: "Reportes" },
     { value: "settings", label: "Tratamientos" },
   ]
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace("/login")
+      }
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace("/login")
+      }
+    })
+    return () => {
+      listener?.subscription.unsubscribe()
+    }
+  }, [router])
 
   return (
     <DashboardLayout mobileTabsMenu={isMobile ? (
