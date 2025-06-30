@@ -365,7 +365,7 @@ export default function AppointmentForm({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.date
-                    ? format(new Date(formData.date), "EEEE, d 'de' MMMM", { locale: es })
+                    ? format(parseDateLocal(formData.date), "EEEE, d 'de' MMMM", { locale: es })
                     : "Selecciona una fecha"}
                 </Button>
               </PopoverTrigger>
