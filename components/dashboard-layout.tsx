@@ -1,11 +1,16 @@
 import type React from "react"
 import ThemeToggle from "@/components/theme-toggle"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Menu } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  mobileTabsMenu?: React.ReactNode
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, mobileTabsMenu }: DashboardLayoutProps) {
+  const isMobile = useIsMobile()
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -16,6 +21,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div className="ml-auto flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
+            {isMobile && mobileTabsMenu}
           </div>
         </div>
       </header>

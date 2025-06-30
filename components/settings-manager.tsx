@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, Plus, Edit, Trash2, DollarSign, Clock } from "lucide-react"
+import { Clipboard, Plus, Edit, Trash2, DollarSign, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -84,20 +84,13 @@ export default function SettingsManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-medium">Configuración del Sistema</h3>
-          <p className="text-sm text-muted-foreground">Gestiona tratamientos y configuraciones generales</p>
-        </div>
-      </div>
-
       {/* Gestión de Tratamientos */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
+                <Clipboard className="h-5 w-5" />
                 Gestión de Tratamientos
               </CardTitle>
               <CardDescription>Administra los tipos de tratamientos disponibles</CardDescription>
@@ -251,7 +244,7 @@ export default function SettingsManager() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tratamientos</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
+            <Clipboard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{treatments.length}</div>

@@ -379,9 +379,7 @@ export default function ReportsManager() {
   const getPeriodDisplayName = () => {
     switch (periodType) {
       case "day":
-        const currentDate = getLocalDateString()
-        const dayToShow = selectedDate || currentDate
-        return `Día: ${dayToShow}`
+        return ""
       case "week":
         if (!selectedWeek) return "Semana: No seleccionada"
         const weekStart = new Date(selectedWeek)
@@ -393,9 +391,7 @@ export default function ReportsManager() {
         const monthName = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
         return `Mes: ${monthName}`
       default:
-        const defaultDate = getLocalDateString()
-        const defaultDayToShow = selectedDate || defaultDate
-        return `Día: ${defaultDayToShow}`
+        return ""
     }
   }
 
@@ -416,10 +412,9 @@ export default function ReportsManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 sm:mb-4">
         <div>
-          <h3 className="text-lg font-medium">Reportes y Facturación</h3>
-          <p className="text-sm text-muted-foreground">Análisis financiero y gestión de pagos</p>
+          <span className="text-lg font-semibold">{getPeriodDisplayName()}</span>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:space-x-2">
           <Select value={periodType} onValueChange={(value: "day" | "week" | "month") => setPeriodType(value)}>
@@ -493,11 +488,6 @@ export default function ReportsManager() {
             Exportar
           </Button>
         </div>
-      </div>
-
-      {/* Período seleccionado */}
-      <div className="text-center">
-        <h4 className="text-lg font-medium">{getPeriodDisplayName()}</h4>
       </div>
 
       {/* Estadísticas principales */}

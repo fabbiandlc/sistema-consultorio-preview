@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Plus, Search, FileText, Upload, Eye, Calendar, DollarSign, FileImage, Edit, Trash2, Save, X } from "lucide-react"
+import { User, Plus, Search, FileText, Upload, Eye, Calendar, DollarSign, FileImage, Edit, Trash2, Save, X, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinic } from "@/contexts/clinic-context"
 import { Patient } from "@/lib/database"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Consultation {
   id: number
@@ -49,6 +51,13 @@ export default function PatientManager() {
   const [searchTerm, setSearchTerm] = useState("")
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<Patient>>({})
+  const isMobile = useIsMobile()
+  const [activeTab, setActiveTab] = useState("info")
+  const tabOptions = [
+    { value: "info", label: "Información" },
+    { value: "history", label: "Historial" },
+    { value: "billing", label: "Facturación" },
+  ]
 
   // Estado local para el formulario de nuevo paciente
   const [form, setForm] = useState({
@@ -205,75 +214,71 @@ export default function PatientManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-medium">Gestión de Pacientes</h3>
-          <p className="text-sm text-muted-foreground">Administra expedientes médicos y historial de pacientes</p>
-        </div>
-        <Dialog open={isNewPatientDialogOpen} onOpenChange={(open) => { setIsNewPatientDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo Paciente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Nuevo Paciente</DialogTitle>
-              <DialogDescription>Registra los datos completos del nuevo paciente</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre completo *</Label>
-                  <Input id="name" placeholder="Nombre del paciente" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-                  <Input id="birthDate" type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Correo electrónico" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input id="phone" placeholder="+1 234 567 8900" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Dirección</Label>
-                <Input id="address" placeholder="Dirección completa" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContact">Contacto de emergencia</Label>
-                <Input id="emergencyContact" placeholder="+1 234 567 8900" value={form.emergencyContact} onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="medicalHistory">Historia médica</Label>
-                <Textarea id="medicalHistory" placeholder="Alergias, medicamentos, condiciones médicas..." rows={3} value={form.medicalHistory} onChange={e => setForm(f => ({ ...f, medicalHistory: e.target.value }))} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" onClick={handleCreatePatient}>
-                Crear paciente
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 sm:mb-4">
+        {/* Eliminado el botón de aquí */}
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Lista de Pacientes
               </CardTitle>
-              <CardDescription>Busca y selecciona un paciente</CardDescription>
+              <Dialog open={isNewPatientDialogOpen} onOpenChange={(open) => { setIsNewPatientDialogOpen(open); if (!open) resetForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="ml-2" size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nuevo Paciente
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Nuevo Paciente</DialogTitle>
+                    <DialogDescription>Registra los datos completos del nuevo paciente</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nombre completo *</Label>
+                        <Input id="name" placeholder="Nombre del paciente" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="birthDate">Fecha de nacimiento</Label>
+                        <Input id="birthDate" type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" placeholder="Correo electrónico" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Teléfono</Label>
+                        <Input id="phone" placeholder="+1 234 567 8900" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Dirección</Label>
+                      <Input id="address" placeholder="Dirección completa" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="emergencyContact">Contacto de emergencia</Label>
+                      <Input id="emergencyContact" placeholder="+1 234 567 8900" value={form.emergencyContact} onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="medicalHistory">Historia médica</Label>
+                      <Textarea id="medicalHistory" placeholder="Alergias, medicamentos, condiciones médicas..." rows={3} value={form.medicalHistory} onChange={e => setForm(f => ({ ...f, medicalHistory: e.target.value }))} />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" onClick={handleCreatePatient}>
+                      Crear paciente
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -320,10 +325,6 @@ export default function PatientManager() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <FileText className="h-5 w-5" />
-                          <div>
-                            <CardTitle>Expediente: {selectedPatient.name}</CardTitle>
-                            <CardDescription>Información completa del paciente</CardDescription>
-                          </div>
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -353,24 +354,44 @@ export default function PatientManager() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <Tabs defaultValue="info" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="info">Información</TabsTrigger>
-                          <TabsTrigger value="history">Historial</TabsTrigger>
-                          <TabsTrigger value="billing">Facturación</TabsTrigger>
-                        </TabsList>
+                      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        {isMobile ? (
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold text-base">{tabOptions.find(t => t.value === activeTab)?.label}</span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-2 rounded-md border bg-muted" aria-label="Abrir menú de pestañas">
+                                  <Menu className="h-6 w-6" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {tabOptions.map(tab => (
+                                  <DropdownMenuItem key={tab.value} onClick={() => setActiveTab(tab.value)}>
+                                    {tab.label}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ) : (
+                          <TabsList className="grid w-full grid-cols-3">
+                            {tabOptions.map(tab => (
+                              <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                            ))}
+                          </TabsList>
+                        )}
 
                         <TabsContent value="info" className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {renderEditableField("name", "Nombre", selectedPatient.name)}
-                            {renderEditableField("birthDate", "Fecha de nacimiento", selectedPatient.birthDate, "date")}
-                            {renderEditableField("email", "Email", selectedPatient.email as string | undefined)}
-                            {renderEditableField("phone", "Teléfono", selectedPatient.phone as string | undefined)}
-                            {renderEditableField("address", "Dirección", selectedPatient.address as string | undefined)}
-                            {renderEditableField("emergencyContact", "Contacto de emergencia", selectedPatient.emergencyContact as string | undefined)}
+                            {renderEditableField("name", "Nombre", selectedPatient.name ?? "")}
+                            {renderEditableField("birthDate", "Fecha de nacimiento", selectedPatient.birthDate ?? "", "date")}
+                            {renderEditableField("email", "Email", selectedPatient.email ?? "")}
+                            {renderEditableField("phone", "Teléfono", selectedPatient.phone ?? "")}
+                            {renderEditableField("address", "Dirección", selectedPatient.address ?? "")}
+                            {renderEditableField("emergencyContact", "Contacto de emergencia", selectedPatient.emergencyContact ?? "")}
                           </div>
                           <div>
-                            {renderEditableField("medicalHistory", "Historia médica", selectedPatient.medicalHistory as string | undefined, "textarea")}
+                            {renderEditableField("medicalHistory", "Historia médica", selectedPatient.medicalHistory ?? "", "textarea")}
                           </div>
                         </TabsContent>
 
@@ -457,10 +478,6 @@ export default function PatientManager() {
               <CardContent className="flex items-center justify-center h-96">
                 <div className="text-center">
                   <User className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-medium">Selecciona un paciente</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Elige un paciente de la lista para ver su expediente completo
-                  </p>
                 </div>
               </CardContent>
             </Card>

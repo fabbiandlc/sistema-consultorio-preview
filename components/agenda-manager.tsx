@@ -196,7 +196,7 @@ export default function AgendaManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 sm:mb-4">
         <DateNavigator 
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
@@ -283,11 +283,6 @@ export default function AgendaManager() {
                   ? "Agenda del Día" 
                   : `Agenda del ${format(selectedDate, 'd/M/yyyy')}`}
               </CardTitle>
-              <CardDescription>
-                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
-                  ? "Vista completa de todas las citas programadas" 
-                  : `Vista completa de todas las citas programadas para el ${format(selectedDate, 'EEEE, d \'de\' MMMM', { locale: es })}`}
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -378,11 +373,6 @@ export default function AgendaManager() {
                   ? "Citas Programadas" 
                   : `Citas del ${format(selectedDate, 'd/M/yyyy')}`}
               </CardTitle>
-              <CardDescription>
-                {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
-                  ? "Próximas citas del día" 
-                  : `Próximas citas del ${format(selectedDate, 'd/M/yyyy')}`}
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -416,7 +406,6 @@ export default function AgendaManager() {
       <Card>
         <CardHeader>
           <CardTitle>Actividad Reciente</CardTitle>
-          <CardDescription>Últimas consultas completadas</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
