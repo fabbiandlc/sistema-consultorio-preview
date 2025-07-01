@@ -101,6 +101,10 @@ export default function LoginPage() {
               {loading ? "ENTRANDO..." : "LOGIN"}
             </Button>
           </form>
+          <div className="mt-4 text-xs text-center text-muted-foreground retro-font">
+            Las credenciales de ejemplo son:<br />
+            <span className="font-bold">correo@hotmail.com</span> / <span className="font-bold">correo</span>
+          </div>
         </div>
       </div>
     </>
